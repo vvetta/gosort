@@ -1,9 +1,9 @@
 package goSort
 
 import (
-	"container/heap"
 	"bufio"
 	"bytes"
+	"container/heap"
 	"io"
 	"os"
 	"sort"
@@ -21,7 +21,7 @@ type Sorter struct {
 }
 
 type Line struct {
-	line []byte
+	line   []byte
 	KeyStr string
 	KeyNum float64
 	HasNum bool
@@ -50,8 +50,10 @@ func (s *Sorter) Sort() error {
 
 	_ = os.MkdirAll("temp", 0o755)
 
-	flushChunk := func () error {
-		if len(chunks) == 0 {return nil}
+	flushChunk := func() error {
+		if len(chunks) == 0 {
+			return nil
+		}
 
 		sort.Slice(chunks, func(i, j int) bool {
 			return s.less(chunks[i], chunks[j])
@@ -60,7 +62,7 @@ func (s *Sorter) Sort() error {
 		if s.flags.U && len(chunks) > 1 {
 			dst := 1
 			for i := 1; i < len(chunks); i++ {
-				if !s.equalKey(chunks[i], chunks[dst - 1]) {
+				if !s.equalKey(chunks[i], chunks[dst-1]) {
 					chunks[dst] = chunks[i]
 					dst++
 				}
@@ -76,7 +78,7 @@ func (s *Sorter) Sort() error {
 
 		writer := bufio.NewWriter(tmpf)
 		for i := 0; i < len(chunks); i++ {
-			if _, err := writer.Write(chunks[i].line); err != nil {	
+			if _, err := writer.Write(chunks[i].line); err != nil {
 				return err
 			}
 
@@ -97,20 +99,20 @@ func (s *Sorter) Sort() error {
 
 		return nil
 	}
-	
+
 	for {
 		line, err := reader.ReadBytes('\n')
 		if len(line) > 0 {
 			l := line
-			if l[len(l) - 1] == '\n' {
-				l = l[:len(l) - 1]
+			if l[len(l)-1] == '\n' {
+				l = l[:len(l)-1]
 			}
 
 			cp := make([]byte, len(l))
 			copy(cp, l)
-		
+
 			keyStr, keyNum, hasNum := s.extractKey(cp)
-			record := &Line{line: cp, KeyStr: keyStr, KeyNum: keyNum, HasNum: hasNum}	
+			record := &Line{line: cp, KeyStr: keyStr, KeyNum: keyNum, HasNum: hasNum}
 
 			chunks = append(chunks, record)
 			chunksBytes += int64(len(cp)) + 32
@@ -121,7 +123,7 @@ func (s *Sorter) Sort() error {
 			}
 
 		}
-		
+
 		if err == io.EOF {
 			break
 		}
@@ -156,13 +158,13 @@ func (s *Sorter) Sort() error {
 }
 
 func (s *Sorter) catFile(filename string, out io.Writer) error {
-	f, err := os.Open(filename) 
+	f, err := os.Open(filename)
 	if err != nil {
 		return err
 	}
 
 	defer f.Close()
-	_, err = io.Copy(out, f)	
+	_, err = io.Copy(out, f)
 	return err
 }
 
@@ -180,7 +182,7 @@ func (s *Sorter) less(a, b *Line) bool {
 					return a.KeyNum > b.KeyNum
 				}
 				return a.KeyNum < b.KeyNum
-			}	
+			}
 		} else {
 			if a.KeyStr != b.KeyStr {
 				if s.flags.R {
@@ -235,7 +237,7 @@ func (s *Sorter) extractKey(line []byte) (keyStr string, keyNum float64, hasNum 
 	if s.flags.N {
 		if len(key) == 0 {
 			return keyStr, 0, false
-		} 
+		}
 
 		if num, err := strconv.ParseFloat(keyStr, 64); err == nil {
 			return keyStr, num, true
@@ -291,7 +293,7 @@ func (s *Sorter) mergeChunks(paths []string, out io.Writer) error {
 		if err != nil {
 			return err
 		}
-		sources = append(sources, src{f: f, br: bufio.NewReaderSize(f, 1 << 20)})
+		sources = append(sources, src{f: f, br: bufio.NewReaderSize(f, 1<<20)})
 	}
 
 	h := &minHeap{lessF: func(a, b *Line) bool { return s.less(a, b) }}
